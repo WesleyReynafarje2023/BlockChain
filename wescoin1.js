@@ -6,15 +6,15 @@ const MINT_PRIVATE_ADDRESS = "0700a1ad28a20e5b2a517c00242d3e25a88d84bf54dce9e173
 const MINT_KEY_PAIR = ec.keyFromPrivate(MINT_PRIVATE_ADDRESS, "hex");
 const MINT_PUBLIC_ADDRESS = MINT_KEY_PAIR.getPublic("hex");
 
-const privateKey = "62d101759086c306848a0c1020922a78e8402e1330981afe9404d0ecc0a4be3d";
+const privateKey = "39a4a81e8e631a0c51716134328ed944501589b447f1543d9279bacc7f3e3de7";
 const keyPair = ec.keyFromPrivate(privateKey, "hex");
 const publicKey = keyPair.getPublic("hex");
 
 const WS = require("ws");
 
-const PORT = 3000;
-const PEERS = [];
-const MY_ADDRESS = "ws://localhost:3000";
+const PORT = 3001;
+const PEERS = ["ws://localhost:3000"];
+const MY_ADDRESS = "ws://localhost:3001";
 const server = new WS.Server({ port: PORT });
 
 let opened = [], connected = [];
@@ -208,15 +208,15 @@ process.on("uncaughtException", err => console.log(err));
 PEERS.forEach(peer => connect(peer));
 
 setTimeout(() => {
-	const transaction = new Transaction(publicKey, "046856ec283a5ecbd040cd71383a5e6f6ed90ed2d7e8e599dbb5891c13dff26f2941229d9b7301edf19c5aec052177fac4231bb2515cb59b1b34aea5c06acdef43", 200, 10);
+	if (JeChain.transactions.length !== 0) {
+		JeChain.mineTransactions(publicKey);
 
-	transaction.sign(keyPair);
-
-	sendMessage(produceMessage("TYPE_CREATE_TRANSACTION", transaction));
-
-	JeChain.addTransaction(transaction);
-
-}, 5000);
+		sendMessage(produceMessage("TYPE_REPLACE_CHAIN", [
+			JeChain.getLastBlock(),
+			JeChain.difficulty
+		]))
+	}
+}, 6500);
 
 setTimeout(() => {
 	console.log(opened);
